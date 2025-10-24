@@ -147,6 +147,49 @@ def simple_center_crop(image,scale_with_height,closest_resolution):
     resized_img = convert_unit8_float(resized_img)
     return resized_img, crop_x, crop_y
 
+class PromptVariables_lrzjason:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {},
+            "optional": {
+                "var1_name": ("STRING", {"default": ""}),
+                "var1_value": ("STRING", {"multiline": True, "default": ""}),
+                "var2_name": ("STRING", {"default": ""}),
+                "var2_value": ("STRING", {"multiline": True, "default": ""}),
+                "var3_name": ("STRING", {"default": ""}),
+                "var3_value": ("STRING", {"multiline": True, "default": ""}),
+                "var4_name": ("STRING", {"default": ""}),
+                "var4_value": ("STRING", {"multiline": True, "default": ""}),
+                "var5_name": ("STRING", {"default": ""}),
+                "var5_value": ("STRING", {"multiline": True, "default": ""}),
+            }
+        }
+
+    RETURN_TYPES = ("PROMPT_VARIABLES",)
+    RETURN_NAMES = ("variables",)
+    FUNCTION = "create_variables"
+    CATEGORY = "advanced/conditioning"
+
+    def create_variables(self, var1_name="", var1_value="", 
+                        var2_name="", var2_value="",
+                        var3_name="", var3_value="",
+                        var4_name="", var4_value="",
+                        var5_name="", var5_value=""):
+        variables = {}
+        
+        # Only add variables that have names
+        for name, value in [
+            (var1_name, var1_value),
+            (var2_name, var2_value),
+            (var3_name, var3_value),
+            (var4_name, var4_value),
+            (var5_name, var5_value),
+        ]:
+            if name and name.strip():
+                variables[name.strip()] = value
+        
+        return (variables,)
 
 class TextEncodeQwenImageEdit_lrzjason:
     @classmethod
@@ -220,6 +263,7 @@ class TextEncodeQwenImageEditPlus_lrzjason:
                 "image3": ("IMAGE", ),
                 "image4": ("IMAGE", ),
                 "image5": ("IMAGE", ),
+                "variables": ("PROMPT_VARIABLES", ),
                 "enable_resize": ("BOOLEAN", {"default": True}),
                 "enable_vl_resize": ("BOOLEAN", {"default": True}),
                 "skip_first_image_resize": ("BOOLEAN", {"default": False}),
@@ -236,13 +280,28 @@ class TextEncodeQwenImageEditPlus_lrzjason:
 
     CATEGORY = "advanced/conditioning"
 
-    def encode(self, clip, prompt, vae=None, 
+    def apply_template(self, text, variables):
+        """Replace #{variable_name} with values from variables dict"""
+        if not variables:
+            return text
+        
+        result = text
+        for var_name, var_value in variables.items():
+            # Replace both #{var_name} and {var_name} syntax
+            result = result.replace(f"#{{{var_name}}}", var_value)
+            result = result.replace(f"{{{var_name}}}", var_value)
+        
+        return result
+
+    def encode(self, clip, prompt, variables=None, vae=None, 
                image1=None, image2=None, image3=None, image4=None, image5=None, 
                enable_resize=True, enable_vl_resize=True, skip_first_image_resize=False,
                upscale_method="bicubic",
                crop="center",
                instruction=""
                ):
+        # Apply templating to prompt if variables provided
+        processed_prompt = self.apply_template(prompt, variables) if variables else prompt
         ref_latents = []
         images = [image1, image2, image3, image4, image5]
         images_vl = []
@@ -295,7 +354,7 @@ class TextEncodeQwenImageEditPlus_lrzjason:
                 image = s.movedim(1, -1)
                 images_vl.append(image)
 
-        tokens = clip.tokenize(image_prompt + prompt, images=images_vl, llama_template=llama_template)
+        tokens = clip.tokenize(image_prompt + processed_prompt, images=images_vl, llama_template=llama_template)
         conditioning = clip.encode_from_tokens_scheduled(tokens)
         if len(ref_latents) > 0:
             conditioning = node_helpers.conditioning_set_values(conditioning, {"reference_latents": ref_latents}, append=True)
