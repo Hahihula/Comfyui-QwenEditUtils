@@ -803,6 +803,7 @@ NODE_CLASS_MAPPINGS = {
     "TextEncodeQwenImageEditPlus_lrzjason": TextEncodeQwenImageEditPlus_lrzjason,
     "TextEncodeQwenImageEditPlusAdvance_lrzjason": TextEncodeQwenImageEditPlusAdvance_lrzjason,
     "TextEncodeQwenImageEditPlusPro_lrzjason": TextEncodeQwenImageEditPlusPro_lrzjason,
+    "PromptVariables_lrzjason": PromptVariables_lrzjason,
 }
 
 # Display name mappings
@@ -812,4 +813,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "TextEncodeQwenImageEditPlus_lrzjason": "TextEncodeQwenImageEditPlus 小志Jason(xiaozhijason)",
     "TextEncodeQwenImageEditPlusAdvance_lrzjason": "TextEncodeQwenImageEditPlusAdvance 小志Jason(xiaozhijason)",
     "TextEncodeQwenImageEditPlusPro_lrzjason": "TextEncodeQwenImageEditPlusPro 小志Jason(xiaozhijason)",
+    "PromptVariables_lrzjason": "PromptVariables 小志Jason(xiaozhijason)",
 }
